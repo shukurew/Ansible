@@ -1,0 +1,56 @@
+---
+- name: Install node and npm
+  hosts: aws
+  tasks:
+    - name: Install nodejs and npm
+      yum: update_cache=yes
+    - name: Install nodejsandnpm
+      yum:
+        pkg:
+          - htop
+- name: Create new user Linux
+  hosts: aws
+ # become: True
+  tasks:
+    - name: Create Linux User
+      user: 
+        name: shukur
+        comment: Shukur admin
+        group: adm
+      register: user_creation_result
+    - debug: msg={{user_creation_result}}
+
+
+- name: Deploy nodejs app
+  hosts: aws
+  vars_files:
+    - /home/ec2-user/ansible/project-vars
+ #become: True
+ # become_user: shukur
+  tasks: 
+    - name: Copy file to the server
+      copy:
+        src: /home/ec2-user/ansible/Git/nodejs-app-"{{version}}".tgz
+        dest: /home/ec2-user/node-app-"{{version}}.tgz
+    - name: Unpack the file      
+      unarchive:
+        src: /home/ec2-user/node-app-"{{version}}.tgz
+        dest: /home/ec2-user
+       # remote_src: yes
+      register: user_creation_result
+    - debug: msg={{user_creation_result}}
+
+    - name: Install dependencies
+      npm:
+        path: /home/ec2-user/package
+    - name: Start the application
+      command:
+        chdir: /home/shukur/package/app
+        cmd: node server 
+      async: 1000
+      poll: 0
+    - name: Ensure app running
+      shell: ps  aux | grep node
+      register: app_status
+    - debug: msg={{app_status.stdout_lines}}
+

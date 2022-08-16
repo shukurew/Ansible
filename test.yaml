@@ -1,0 +1,9 @@
+---
+- name: Conf nginx
+  hosts: aws
+  become: yes
+  tasks:
+  - name: install nginx
+    yum: 
+      name: htop
+      state: latest

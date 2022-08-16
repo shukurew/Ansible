@@ -1,0 +1,74 @@
+---
+- name: Install python 3
+  hosts: aws
+  tasks: 
+    - name: Install python and docker via yum
+      vars:
+        ansible_python_interpreter: /usr/bin/python
+      yum:
+        name: 
+          - python3
+          - docker 
+        update_cache: yes
+        state: present
+    - name: Install Docker python modul
+      pip:
+        name: docker  
+
+- name: Install Docker compose
+  hosts: aws
+  become: yes
+  tasks: 
+    - name: Download and intall Docker-compoese
+      get_url:
+        url: https://github.com/docker/compose/releases/download/1.27.4/docker-compose-Linux-{{lookup('pipe', 'uname -m')}}
+        dest: /usr/local/bin/docker-compose
+        mode: +x
+
+- name: Start docker
+  hosts: aws
+  become: yes
+  tasks:
+    - name: Start docker daemon
+      systemd:
+        name: docker
+        state: started
+
+- name: Add ec2-user to Docker group
+  hosts: aws
+  become: yes
+  tasks:
+    - name: Add group
+      user: 
+        name: ec2-user
+        groups: docker
+        append: yes
+    - name: Reconnect to host server
+      meta: reset_connection
+
+- name: Docker pull test
+  hosts: aws
+  tasks: 
+    - name: Pull an image
+      community.docker.docker_image:
+        name: redis
+        source: pull
+      # Select platform for pulling. If not specified, will pull whatever docker prefers.
+     # register: user_creation_result
+     # - debug: msg={{user_creation_result}}
+
+- name: Start  docker container
+  hosts: aws
+  vars_prompt:
+    - name: docker_password
+      prompt: Enter password for docker  
+  tasks:
+    - name: Copy docker-compose file to target machine
+      copy: 
+        src: /home/ec2-user/ansible/docker-compose.yaml
+        dest: /home/ec2-user/ansible2/docker-compose.yaml
+    - name: Log into DockerHub
+      community.docker.docker_login:
+        username: docker
+        password: "{{docker_password}}"
+     
