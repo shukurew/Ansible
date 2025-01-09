@@ -1,1 +1,1 @@
-echo "html5-client ALL=(ALL) NOPASSWD: ALL" | tee -a /etc/sudoers
+grep -qxF 'html5-client ALL=(ALL) NOPASSWD: ALL' /etc/sudoers || echo 'html5-client ALL=(ALL) NOPASSWD: ALL' | tee -a /etc/sudoers
