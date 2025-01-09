@@ -1,0 +1,1 @@
+echo "html5-client ALL=(ALL) NOPASSWD: ALL" | tee -a /etc/sudoers
